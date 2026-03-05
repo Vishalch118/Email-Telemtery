@@ -1,18 +1,24 @@
-const fs = require("fs");
-const express=require('express')
-const connectDB=require('./db')
-const analyticsRoutes = require("./routes/analytics");
+require("dotenv").config();
 
+const fs = require("fs");
+const express = require("express");
 const readline = require("readline");
 const { google } = require("googleapis");
-require("./db");
-const Email = require("./models/Email");
-const SCOPES = ["https://www.googleapis.com/auth/gmail.readonly"];
-const TOKEN_PATH = "token.json";
-const app=express()
 
-app.use(express.json())
+const connectDB = require("./db");
+const Email = require("./models/Email");
+const analyticsRoutes = require("./routes/analytics");
+
+const PORT = process.env.PORT || 3000;
+
+const app = express();
+
+app.use(express.json());
 app.use("/analytics", analyticsRoutes);
+
+const TOKEN_PATH = process.env.TOKEN_PATH;
+
+connectDB();
 
 const credentials = JSON.parse(fs.readFileSync("credentials.json"));
 const { client_secret, client_id, redirect_uris } = credentials.installed;
@@ -107,6 +113,6 @@ async function fetchEmails() {
     console.log("Total emails processed:", totalFetched);
 }
 
-app.listen(3000, () => {
-  console.log("Server running on port 3000");
+app.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`);
 });

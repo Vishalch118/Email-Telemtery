@@ -1,13 +1,15 @@
+require("dotenv").config();
 const mongoose = require("mongoose");
 
-mongoose.connect(
-  "mongodb+srv://vishalch22254_db_user:oT0coC3yFmz8llmf@cluster0.u5kmtgq.mongodb.net/?appName=Cluster0/emailTelemetry"
-);
+const connectDB = async () => {
+  try {
+    await mongoose.connect(process.env.MONGO_URI);
 
-mongoose.connection.on("connected", () => {
-  console.log("MongoDB Atlas connected");
-});
+    console.log("MongoDB Atlas connected");
+  } catch (err) {
+    console.error("MongoDB connection error:", err);
+    process.exit(1);
+  }
+};
 
-mongoose.connection.on("error", (err) => {
-  console.log("MongoDB error:", err);
-});
+module.exports = connectDB;
