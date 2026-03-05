@@ -1,0 +1,12 @@
+# Node modules
+node_modules/
+
+# Backend secrets
+BACKEND/token.json
+BACKEND/credentials.json
+
+# Environment files
+.env
+
+# Logs
+npm-debug.log*
