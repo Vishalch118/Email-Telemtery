@@ -4,6 +4,7 @@ node_modules/
 # Backend secrets
 BACKEND/token.json
 BACKEND/credentials.json
+BACKEND/.env
 
 # Environment files
 .env
