@@ -1,25 +1,29 @@
 require("dotenv").config();
 
+const cors = require("cors");
 const fs = require("fs");
 const express = require("express");
 const readline = require("readline");
 const { google } = require("googleapis");
-
+const emailRoutes = require("./routes/email");
 const connectDB = require("./db");
 const Email = require("./models/Email");
 const analyticsRoutes = require("./routes/analytics");
-
+const mongoose = require('mongoose')
 const PORT = process.env.PORT || 3000;
 
 const app = express();
 
 app.use(express.json());
+app.use(cors())
 app.use("/analytics", analyticsRoutes);
-
+app.use("/emails", emailRoutes);
 const TOKEN_PATH = process.env.TOKEN_PATH;
 
 connectDB();
-
+mongoose.connection.on("connected", () => {
+    console.log("MongoDB connected");
+});
 const credentials = JSON.parse(fs.readFileSync("credentials.json"));
 const { client_secret, client_id, redirect_uris } = credentials.installed;
 
@@ -69,7 +73,7 @@ async function fetchEmails() {
     do {
         const res = await gmail.users.messages.list({
             userId: "me",
-            maxResults: 100,
+            maxResults: 50,
             pageToken: nextPageToken
         });
 
@@ -88,15 +92,36 @@ async function fetchEmails() {
             const from = headers.find(h => h.name === "From")?.value;
             const rawDate = headers.find(h => h.name === "Date")?.value;
             const date = rawDate ? new Date(rawDate) : null;
-            
+            const to = headers.find(h => h.name === "To")?.value;
+
+            let body = "";
+
+            if (msgData.data.payload.parts) {
+                const part = msgData.data.payload.parts.find(
+                    p => p.mimeType === "text/plain"
+                );
+
+                if (part && part.body.data) {
+                    body = Buffer.from(part.body.data, "base64").toString("utf-8");
+                }
+            } else if (msgData.data.payload.body.data) {
+                body = Buffer.from(
+                    msgData.data.payload.body.data,
+                    "base64"
+                ).toString("utf-8");
+            }
+
+
             await Email.updateOne(
                 { gmailId: msg.id },
                 {
                     gmailId: msg.id,
                     subject,
                     from,
+                    to,
                     date,
-                    snippet: msgData.data.snippet
+                    snippet: msgData.data.snippet,
+                    body
                 },
                 { upsert: true }
             );
@@ -104,15 +129,17 @@ async function fetchEmails() {
             console.log("Stored:", subject);
 
             totalFetched++;
+
+            if (totalFetched >= 50) break;
         }
 
         nextPageToken = res.data.nextPageToken;
 
-    } while (nextPageToken && totalFetched < 500); // limit for safety
+    } while (nextPageToken && totalFetched < 50); // limit for safety
 
     console.log("Total emails processed:", totalFetched);
 }
 
 app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
+    console.log(`Server running on port ${PORT}`);
 });

@@ -7,7 +7,7 @@ router.get("/emails-per-day", async (req, res) => {
     {
       $group: {
         _id: {
-          $dateToString: { format: "%Y-%m-%d", date: "$date" }
+          $dateToString: { format: "%Y-%m-%d", date: "$date",timezone: "Asia/Kolkata" }
         },
         count: { $sum: 1 }
       }

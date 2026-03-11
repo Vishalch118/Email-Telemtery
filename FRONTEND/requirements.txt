@@ -1,0 +1,5 @@
+axios
+
+tailwindcss@3
+postcss
+autoprefixer
