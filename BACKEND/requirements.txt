@@ -3,3 +3,5 @@ mongoose
 googleapis
 dotenv
 cors
+html-to-text
+openai

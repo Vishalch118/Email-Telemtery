@@ -10,7 +10,13 @@ const connectDB = require("./db");
 const Email = require("./models/Email");
 const analyticsRoutes = require("./routes/analytics");
 const mongoose = require('mongoose')
+const aiRoutes = require("./routes/ai.js");
 const PORT = process.env.PORT || 3000;
+const { convert } = require("html-to-text");
+
+const SCOPES = [
+  "https://www.googleapis.com/auth/gmail.readonly"
+];
 
 const app = express();
 
@@ -18,6 +24,7 @@ app.use(express.json());
 app.use(cors())
 app.use("/analytics", analyticsRoutes);
 app.use("/emails", emailRoutes);
+app.use("/ai", aiRoutes);
 const TOKEN_PATH = process.env.TOKEN_PATH;
 
 connectDB();
@@ -103,12 +110,19 @@ async function fetchEmails() {
 
                 if (part && part.body.data) {
                     body = Buffer.from(part.body.data, "base64").toString("utf-8");
+                    body = convert(body, {
+                        wordwrap: 130
+                    });
                 }
             } else if (msgData.data.payload.body.data) {
                 body = Buffer.from(
                     msgData.data.payload.body.data,
                     "base64"
                 ).toString("utf-8");
+
+                body = convert(body, {
+                    wordwrap: 130
+                });
             }
 
 
