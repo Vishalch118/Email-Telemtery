@@ -1,14 +1,18 @@
 const express = require("express");
+const OpenAI = require("openai");
 
 const router = express.Router();
 
-/*
-  Detect automated / notification emails
-  These usually should NOT receive replies
-*/
+/* Groq client */
+const client = new OpenAI({
+  apiKey: process.env.GROQ_API_KEY,
+  baseURL: "https://api.groq.com/openai/v1",
+});
+
+/* Detect automated emails */
 function isAutomatedEmail(subject, body) {
   const text = (subject + " " + body).toLowerCase();
-    
+
   const keywords = [
     "verify",
     "login",
@@ -31,10 +35,9 @@ router.post("/reply", async (req, res) => {
   try {
     const { subject, body } = req.body;
 
-    // Limit email size sent to AI
     const trimmedBody = body ? body.slice(0, 1000) : "";
 
-    // Skip automated emails
+    /* Skip automated emails */
     if (isAutomatedEmail(subject, trimmedBody)) {
       return res.json({
         reply: "No reply needed for this automated email."
@@ -45,13 +48,12 @@ router.post("/reply", async (req, res) => {
 You are writing an email reply as Vishal.
 
 Rules:
-- Reply as the recipient of the email.
-- Write ONLY the reply email.
-- Do NOT explain anything.
-- Do NOT generate multiple options.
-- Do NOT include placeholders like [Name].
-- Keep the reply short (2-4 sentences).
-- Maintain a polite and professional tone.
+- Reply as the recipient of the email
+- Write ONLY the reply email
+- Do NOT explain anything
+- Do NOT generate multiple options
+- Keep the reply short (2-4 sentences)
+- Maintain a polite professional tone
 
 Email Subject:
 ${subject}
@@ -62,26 +64,22 @@ ${trimmedBody}
 Write the reply now.
 `;
 
-    const response = await fetch("http://localhost:11434/api/generate", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({
-        model: "gemma3:1b",
-        prompt: prompt,
-        stream: false
-      })
+    const completion = await client.chat.completions.create({
+      model: "llama-3.1-8b-instant",
+      messages: [
+        { role: "system", content: "You are a professional email assistant." },
+        { role: "user", content: prompt }
+      ],
+      temperature: 0.4,
+      max_tokens: 200
     });
 
-    const data = await response.json();
+    const reply = completion?.choices?.[0]?.message?.content || "No reply generated.";
 
-    res.json({
-      reply: data.response
-    });
+    res.json({ reply });
 
   } catch (err) {
-    console.error("AI Reply Error:", err);
+    console.error("Groq AI Error:", err.response?.data || err.message || err);
     res.status(500).json({
       error: "AI reply generation failed"
     });
