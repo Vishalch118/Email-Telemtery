@@ -40,12 +40,14 @@ const oAuth2Client = new google.auth.OAuth2(
     redirect_uris[0]
 );
 
-if (fs.existsSync(TOKEN_PATH)) {
-    oAuth2Client.setCredentials(JSON.parse(fs.readFileSync(TOKEN_PATH)));
-    fetchEmails();
-} else {
-    getNewToken();
-}
+// if (fs.existsSync(TOKEN_PATH)) {
+//     oAuth2Client.setCredentials(JSON.parse(fs.readFileSync(TOKEN_PATH)));
+//     fetchEmails();
+// } else {
+//     getNewToken();
+// }
+
+console.log("Skipping Gmail fetch in production");
 
 function getNewToken() {
     const authUrl = oAuth2Client.generateAuthUrl({
