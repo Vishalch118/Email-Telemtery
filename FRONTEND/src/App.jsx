@@ -6,6 +6,7 @@ import EmailsByWeekdayChart from "./components/EmailsByWeekdayChart";
 import EmailList from "./components/emailList";
 
 function App() {
+    console.log(import.meta.env.VITE_API_URL); 
   return (
     <div style={{ minHeight: "100vh", background: "linear-gradient(135deg, #0f0c29 0%, #1a1a2e 50%, #16213e 100%)" }}>
       <header style={{ background: "rgba(255,255,255,0.04)", borderBottom: "1px solid rgba(255,255,255,0.08)", backdropFilter: "blur(12px)" }}>

@@ -15,13 +15,12 @@ const CustomTooltip = ({ active, payload, label }) => {
   }
   return null;
 };
-
+const API_URL = import.meta.env.VITE_API_URL;
 export default function EmailTrendChart() {
   const [data, setData] = useState([]);
 
   useEffect(() => {
-    axios.get("http://localhost:3000/analytics/emails-per-day")
-      .then(res => setData(res.data));
+    axios.get(`${API_URL}/analytics/emails-per-day`)
   }, []);
 
   return (
