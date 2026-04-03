@@ -34,8 +34,8 @@ mongoose.connection.on("connected", () => {
 });
 
 // ================= GOOGLE AUTH =================
-const credentials = require("./credentials.json");
-const { client_id, client_secret } = credentials.web;
+const client_id = process.env.GOOGLE_CLIENT_ID;
+const client_secret = process.env.GOOGLE_CLIENT_SECRET;
 
 const oAuth2Client = new google.auth.OAuth2(
   client_id,
