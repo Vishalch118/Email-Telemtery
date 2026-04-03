@@ -1,18 +1,18 @@
 require("dotenv").config();
 
 const cors = require("cors");
-const fs = require("fs");
 const express = require("express");
-const readline = require("readline");
 const { google } = require("googleapis");
+const mongoose = require("mongoose");
+const { convert } = require("html-to-text");
+
 const emailRoutes = require("./routes/email");
+const analyticsRoutes = require("./routes/analytics");
+const aiRoutes = require("./routes/ai.js");
 const connectDB = require("./db");
 const Email = require("./models/Email");
-const analyticsRoutes = require("./routes/analytics");
-const mongoose = require('mongoose')
-const aiRoutes = require("./routes/ai.js");
+
 const PORT = process.env.PORT || 3000;
-const { convert } = require("html-to-text");
 
 const SCOPES = [
   "https://www.googleapis.com/auth/gmail.readonly"
@@ -21,144 +21,122 @@ const SCOPES = [
 const app = express();
 
 app.use(express.json());
-app.use(cors())
+app.use(cors());
+
 app.use("/analytics", analyticsRoutes);
 app.use("/emails", emailRoutes);
 app.use("/ai", aiRoutes);
-const TOKEN_PATH = process.env.TOKEN_PATH;
 
+// ================= DB =================
 connectDB();
 mongoose.connection.on("connected", () => {
-    console.log("MongoDB connected");
+  console.log("MongoDB connected");
 });
-// const credentials = JSON.parse(fs.readFileSync("credentials.json"));
-// const { client_secret, client_id, redirect_uris } = credentials.installed;
 
-// const oAuth2Client = new google.auth.OAuth2(
-//     client_id,
-//     client_secret,
-//     redirect_uris[0]
-// );
+// ================= GOOGLE AUTH =================
+const credentials = require("./credentials.json");
+const { client_id, client_secret } = credentials.web;
 
-let oAuth2Client = null;
-console.log("Gmail API disabled in production");
+const oAuth2Client = new google.auth.OAuth2(
+  client_id,
+  client_secret
+);
 
-// if (fs.existsSync(TOKEN_PATH)) {
-//     oAuth2Client.setCredentials(JSON.parse(fs.readFileSync(TOKEN_PATH)));
-//     fetchEmails();
-// } else {
-//     getNewToken();
-// }
+// ✅ USE REFRESH TOKEN FROM ENV
+oAuth2Client.setCredentials({
+  refresh_token: process.env.REFRESH_TOKEN,
+});
 
-console.log("Skipping Gmail fetch in production");
+console.log("✅ Using refresh token from env");
 
-// function getNewToken() {
-//     const authUrl = oAuth2Client.generateAuthUrl({
-//         access_type: "offline",
-//         scope: SCOPES,
-//     });
+// ================= EMAIL FETCH =================
+async function fetchEmails() {
+  try {
+    console.log("📥 Fetching emails...");
 
-//     console.log("Authorize this app:", authUrl);
+    const gmail = google.gmail({ version: "v1", auth: oAuth2Client });
 
-//     const rl = readline.createInterface({
-//         input: process.stdin,
-//         output: process.stdout,
-//     });
+    let nextPageToken = null;
+    let totalFetched = 0;
 
-//     rl.question("Enter code: ", (code) => {
-//         rl.close();
-//         oAuth2Client.getToken(code, (err, token) => {
-//             if (err) return console.error("Token error", err);
-//             oAuth2Client.setCredentials(token);
-//             fs.writeFileSync(TOKEN_PATH, JSON.stringify(token));
-//             fetchEmails();
-//         });
-//     });
-// }
+    do {
+      const res = await gmail.users.messages.list({
+        userId: "me",
+        maxResults: 20,
+        pageToken: nextPageToken,
+      });
 
-// async function fetchEmails() {
-//     const gmail = google.gmail({ version: "v1", auth: oAuth2Client });
+      const messages = res.data.messages || [];
 
-//     let nextPageToken = null;
-//     let totalFetched = 0;
+      for (let msg of messages) {
+        const msgData = await gmail.users.messages.get({
+          userId: "me",
+          id: msg.id,
+        });
 
-//     do {
-//         const res = await gmail.users.messages.list({
-//             userId: "me",
-//             maxResults: 50,
-//             pageToken: nextPageToken
-//         });
+        const headers = msgData.data.payload.headers;
 
-//         const messages = res.data.messages || [];
+        const subject = headers.find(h => h.name === "Subject")?.value;
+        const from = headers.find(h => h.name === "From")?.value;
+        const to = headers.find(h => h.name === "To")?.value;
+        const rawDate = headers.find(h => h.name === "Date")?.value;
+        const date = rawDate ? new Date(rawDate) : null;
 
-//         for (let msg of messages) {
+        let body = "";
 
-//             const msgData = await gmail.users.messages.get({
-//                 userId: "me",
-//                 id: msg.id,
-//             });
+        if (msgData.data.payload.parts) {
+          const part = msgData.data.payload.parts.find(
+            p => p.mimeType === "text/plain"
+          );
 
-//             const headers = msgData.data.payload.headers;
+          if (part?.body?.data) {
+            body = Buffer.from(part.body.data, "base64").toString("utf-8");
+            body = convert(body);
+          }
+        }
 
-//             const subject = headers.find(h => h.name === "Subject")?.value;
-//             const from = headers.find(h => h.name === "From")?.value;
-//             const rawDate = headers.find(h => h.name === "Date")?.value;
-//             const date = rawDate ? new Date(rawDate) : null;
-//             const to = headers.find(h => h.name === "To")?.value;
+        await Email.updateOne(
+          { gmailId: msg.id },
+          {
+            gmailId: msg.id,
+            subject,
+            from,
+            to,
+            date,
+            snippet: msgData.data.snippet,
+            body,
+          },
+          { upsert: true }
+        );
 
-//             let body = "";
+        console.log("Stored:", subject);
 
-//             if (msgData.data.payload.parts) {
-//                 const part = msgData.data.payload.parts.find(
-//                     p => p.mimeType === "text/plain"
-//                 );
+        totalFetched++;
+        if (totalFetched >= 20) break;
+      }
 
-//                 if (part && part.body.data) {
-//                     body = Buffer.from(part.body.data, "base64").toString("utf-8");
-//                     body = convert(body, {
-//                         wordwrap: 130
-//                     });
-//                 }
-//             } else if (msgData.data.payload.body.data) {
-//                 body = Buffer.from(
-//                     msgData.data.payload.body.data,
-//                     "base64"
-//                 ).toString("utf-8");
+      nextPageToken = res.data.nextPageToken;
 
-//                 body = convert(body, {
-//                     wordwrap: 130
-//                 });
-//             }
+    } while (nextPageToken && totalFetched < 20);
 
+    console.log("✅ Emails fetched:", totalFetched);
 
-//             await Email.updateOne(
-//                 { gmailId: msg.id },
-//                 {
-//                     gmailId: msg.id,
-//                     subject,
-//                     from,
-//                     to,
-//                     date,
-//                     snippet: msgData.data.snippet,
-//                     body
-//                 },
-//                 { upsert: true }
-//             );
+  } catch (err) {
+    console.error("❌ Error fetching emails:", err.message);
+  }
+}
 
-//             console.log("Stored:", subject);
+// ================= AUTO SYNC =================
 
-//             totalFetched++;
+// Run once at startup
+fetchEmails();
 
-//             if (totalFetched >= 50) break;
-//         }
+// Run every 5 minutes
+setInterval(() => {
+  fetchEmails();
+}, 5 * 60 * 1000);
 
-//         nextPageToken = res.data.nextPageToken;
-
-//     } while (nextPageToken && totalFetched < 50); // limit for safety
-
-//     console.log("Total emails processed:", totalFetched);
-// }
-
+// ================= START =================
 app.listen(PORT, () => {
-    console.log(`Server running on port ${PORT}`);
+  console.log(`\n🚀 Server running on port ${PORT}`);
 });
