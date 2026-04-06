@@ -14,6 +14,8 @@ const Email = require("./models/Email");
 
 const PORT = process.env.PORT || 3000;
 
+const redisClient = require("./redisClient");
+
 const SCOPES = [
   "https://www.googleapis.com/auth/gmail.readonly"
 ];
@@ -119,10 +121,21 @@ async function fetchEmails() {
 
     } while (nextPageToken && totalFetched < 20);
 
-    console.log("✅ Emails fetched:", totalFetched);
+    console.log("Emails fetched:", totalFetched);
+
+    // CLEAR CACHE AFTER NEW DATA
+    await redisClient.del("emails");
+
+    await redisClient.del("analytics:top_senders");
+    await redisClient.del("analytics:emails_per_day");
+    await redisClient.del("analytics:emails_by_hour");
+    await redisClient.del("analytics:emails_by_weekday");
+    await redisClient.del("analytics:summary");
+
+    console.log("Cache cleared after email sync");
 
   } catch (err) {
-    console.error("❌ Error fetching emails:", err.message);
+    console.error("Error fetching emails:", err.message);
   }
 }
 

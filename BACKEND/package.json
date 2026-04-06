@@ -19,6 +19,7 @@
     "html-to-text": "^9.0.5",
     "mongoose": "^9.2.2",
     "node-fetch": "^3.3.2",
-    "openai": "^6.27.0"
+    "openai": "^6.27.0",
+    "redis": "^5.11.0"
   }
 }

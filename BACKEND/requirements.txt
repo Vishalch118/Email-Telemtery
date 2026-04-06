@@ -4,5 +4,5 @@ googleapis
 dotenv
 cors
 html-to-text
-openai
 axios
+redis
