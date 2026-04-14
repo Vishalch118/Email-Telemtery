@@ -1,12 +1,25 @@
 const redisClient = require("../redisClient");
 
-const getOrSetCache = async (key, cb, ttl = 600) => {
+const getOrSetCache = async (key, cb, ttl = 60) => {
   try {
     const cache = await redisClient.get(key);
 
     if (cache) {
       console.log(`Cache HIT: ${key}`);
-      return JSON.parse(cache);
+
+      const parsed = JSON.parse(cache);
+
+      // ✅ background refresh (non-blocking)
+      cb()
+        .then((freshData) => {
+          redisClient.setEx(key, ttl, JSON.stringify(freshData));
+          console.log(`🔄 Cache refreshed: ${key}`);
+        })
+        .catch((err) => {
+          console.error(`Cache refresh error (${key}):`, err.message);
+        });
+
+      return parsed;
     }
 
     console.log(`Cache MISS: ${key}`);
@@ -19,7 +32,9 @@ const getOrSetCache = async (key, cb, ttl = 600) => {
 
   } catch (err) {
     console.error("Cache error:", err);
-    return await cb(); // fallback
+
+    // fallback without cache
+    return await cb();
   }
 };
 

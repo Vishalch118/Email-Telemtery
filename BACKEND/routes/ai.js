@@ -10,7 +10,7 @@ const client = new OpenAI({
 });
 
 /* Detect automated emails */
-function isAutomatedEmail(subject, body) {
+function isAutomatedEmail(subject = "", body = "") {
   const text = (subject + " " + body).toLowerCase();
 
   const keywords = [
@@ -19,13 +19,15 @@ function isAutomatedEmail(subject, body) {
     "alert",
     "notification",
     "job alert",
-    "sip",
-    "fund",
-    "units allocated",
     "newsletter",
     "update",
     "no-reply",
-    "noreply"
+    "noreply",
+    "otp",
+    "password",
+    "subscription",
+    "receipt",
+    "invoice"
   ];
 
   return keywords.some(keyword => text.includes(keyword));
@@ -33,32 +35,40 @@ function isAutomatedEmail(subject, body) {
 
 router.post("/reply", async (req, res) => {
   try {
-    const { subject, body } = req.body;
+    const { subject, body, from } = req.body;
 
-    const trimmedBody = body ? body.slice(0, 1000) : "";
+    if (!body || body.trim().length < 10) {
+      return res.json({
+        reply: "Not enough content to generate a meaningful reply."
+      });
+    }
+
+    const trimmedBody = body.slice(0, 1200);
 
     /* Skip automated emails */
     if (isAutomatedEmail(subject, trimmedBody)) {
       return res.json({
-        reply: "No reply needed for this automated email."
+        reply: "No reply needed for this automated or system-generated email."
       });
     }
 
     const prompt = `
-You are writing an email reply as Vishal.
+You are writing a real human email reply.
 
 Rules:
-- Reply as the recipient of the email
-- Write ONLY the reply email
-- Do NOT explain anything
-- Do NOT generate multiple options
-- Keep the reply short (2-4 sentences)
-- Maintain a polite professional tone
+- Write naturally like a real person (not a template)
+- Do NOT include placeholders like [Your Name]
+- Do NOT include unnecessary greetings like "Dear Sir/Madam"
+- Keep it short (2–4 sentences)
+- Be polite and professional
+- Make it sound conversational, not robotic
+- Only output the reply text
 
-Email Subject:
-${subject}
+Email:
+From: ${from || "Unknown"}
+Subject: ${subject || "No Subject"}
 
-Email Content:
+Content:
 ${trimmedBody}
 
 Write the reply now.
@@ -67,19 +77,28 @@ Write the reply now.
     const completion = await client.chat.completions.create({
       model: "llama-3.1-8b-instant",
       messages: [
-        { role: "system", content: "You are a professional email assistant." },
-        { role: "user", content: prompt }
+        {
+          role: "system",
+          content: "You are a professional email reply assistant."
+        },
+        {
+          role: "user",
+          content: prompt
+        }
       ],
-      temperature: 0.4,
+      temperature: 0.5,
       max_tokens: 200
     });
 
-    const reply = completion?.choices?.[0]?.message?.content || "No reply generated.";
+    const reply =
+      completion?.choices?.[0]?.message?.content?.trim() ||
+      "No reply generated.";
 
     res.json({ reply });
 
   } catch (err) {
     console.error("Groq AI Error:", err.response?.data || err.message || err);
+
     res.status(500).json({
       error: "AI reply generation failed"
     });
