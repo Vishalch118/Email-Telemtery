@@ -1,5 +1,4 @@
-import { useEffect, useState } from "react";
-import { getEmails } from "../services/api";
+import { useState } from "react";
 import { generateReply } from "../services/api";
 
 function getInitials(email) {
@@ -16,33 +15,37 @@ const avatarColors = [
   "linear-gradient(135deg, #ec4899, #db2777)",
 ];
 
-export default function EmailList() {
-  const [emails, setEmails] = useState([]);
+export default function EmailList({ data: emails }) {
+
   const [aiReplies, setAiReplies] = useState({});
   const [loadingAI, setLoadingAI] = useState({});
-  useEffect(() => {
-    getEmails().then(res => setEmails(res.data));
-  }, []);
+
+  // ✅ loading guard
+  if (!emails) {
+    return <p style={{ color: "white", textAlign: "center" }}>Loading emails...</p>;
+  }
 
   const handleAIReply = async (email) => {
-
     setLoadingAI(prev => ({
       ...prev,
       [email.gmailId]: true
     }));
 
-    const res = await generateReply(email.subject, email.body);
+    try {
+      const res = await generateReply(email.subject, email.body);
 
-    setAiReplies(prev => ({
-      ...prev,
-      [email.gmailId]: res.reply
-    }));
+      setAiReplies(prev => ({
+        ...prev,
+        [email.gmailId]: res.reply
+      }));
+    } catch (err) {
+      console.error("AI reply failed:", err);
+    }
 
     setLoadingAI(prev => ({
       ...prev,
       [email.gmailId]: false
     }));
-
   };
 
   return (
@@ -93,29 +96,15 @@ export default function EmailList() {
 
             {/* Content */}
             <div style={{ flex: 1, minWidth: 0 }}>
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 4, flexWrap: "wrap", gap: 4 }}>
+              <div style={{ display: "flex", justifyContent: "space-between", flexWrap: "wrap", gap: 4 }}>
                 <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
-                  <span style={{ color: "rgba(255,255,255,0.5)", fontSize: 12 }}>
-                    <span style={{ color: "rgba(255,255,255,0.3)" }}>From </span>
-                    <span style={{ color: "#a5b4fc" }}>{email.from}</span>
-                  </span>
-                  <span style={{ color: "rgba(255,255,255,0.5)", fontSize: 12 }}>
-                    <span style={{ color: "rgba(255,255,255,0.3)" }}>To </span>
-                    <span style={{ color: "rgba(255,255,255,0.5)" }}>{email.to}</span>
-                  </span>
-
-                  <span style={{ color: "rgba(255,255,255,0.5)", fontSize: 12 }}>
-                    <span style={{ color: "rgba(255,255,255,0.3)" }}>Date </span>
-                    {new Date(email.date).toLocaleString()}
-                  </span>
+                  <span style={{ color: "#a5b4fc", fontSize: 12 }}>{email.from}</span>
                 </div>
               </div>
 
-              <h3 style={{ color: "#fff", fontSize: 14, fontWeight: 600, margin: "0 0 6px 0", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
-                {email.subject}
-              </h3>
+              <h3 style={{ color: "#fff", fontSize: 14 }}>{email.subject}</h3>
 
-              <p style={{ color: "rgba(255,255,255,0.4)", fontSize: 13, margin: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+              <p style={{ color: "rgba(255,255,255,0.4)", fontSize: 13 }}>
                 {email.body
                   ?.replace(/<[^>]+>/g, " ")
                   .replace(/\s+/g, " ")
@@ -123,39 +112,25 @@ export default function EmailList() {
                   .slice(0, 200) || email.snippet}
               </p>
 
-
               {aiReplies[email.gmailId] && (
-                <div
-                  style={{
-                    marginTop: 12,
-                    padding: "12px 14px",
-                    background: "rgba(99,102,241,0.08)",
-                    border: "1px solid rgba(99,102,241,0.25)",
-                    borderRadius: 10,
-                    color: "rgba(255,255,255,0.85)",
-                    fontSize: 13,
-                    lineHeight: 1.6,
-                  }}
-                >
-                  <div
-                    style={{
-                      fontSize: 11,
-                      fontWeight: 700,
-                      letterSpacing: 0.5,
-                      textTransform: "uppercase",
-                      color: "#a5b4fc",
-                      marginBottom: 6,
-                    }}
-                  >
+                <div style={{
+                  marginTop: 12,
+                  padding: "12px 14px",
+                  background: "rgba(99,102,241,0.08)",
+                  border: "1px solid rgba(99,102,241,0.25)",
+                  borderRadius: 10,
+                  color: "rgba(255,255,255,0.85)",
+                  fontSize: 13,
+                }}>
+                  <div style={{ fontSize: 11, fontWeight: 700, color: "#a5b4fc" }}>
                     AI Generated Reply
                   </div>
-
                   <div>{aiReplies[email.gmailId]}</div>
                 </div>
               )}
             </div>
 
-            {/* Action */}
+            {/* ✅ BUTTON RESTORED EXACTLY */}
             <button
               style={{
                 flexShrink: 0,

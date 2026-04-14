@@ -1,8 +1,6 @@
-import { useEffect, useState } from "react";
 import {
   BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, Cell
 } from "recharts";
-import { getEmailsByHour } from "../services/api";
 
 const CustomTooltip = ({ active, payload, label }) => {
   if (active && payload && payload.length) {
@@ -11,18 +9,16 @@ const CustomTooltip = ({ active, payload, label }) => {
     const displayHour = hour % 12 === 0 ? 12 : hour % 12;
 
     return (
-      <div
-        style={{
-          background: "rgba(15,12,41,0.95)",
-          border: "1px solid rgba(16,185,129,0.3)",
-          borderRadius: 10,
-          padding: "10px 14px"
-        }}
-      >
-        <p style={{ color: "rgba(255,255,255,0.5)", fontSize: 12, marginBottom: 4 }}>
+      <div style={{
+        background: "rgba(15,12,41,0.95)",
+        border: "1px solid rgba(16,185,129,0.3)",
+        borderRadius: 10,
+        padding: "10px 14px"
+      }}>
+        <p style={{ color: "rgba(255,255,255,0.5)", fontSize: 12 }}>
           {displayHour}:00 {ampm}
         </p>
-        <p style={{ color: "#6ee7b7", fontWeight: 700, fontSize: 16 }}>
+        <p style={{ color: "#6ee7b7", fontWeight: 700 }}>
           {payload[0].value} emails
         </p>
       </div>
@@ -31,90 +27,41 @@ const CustomTooltip = ({ active, payload, label }) => {
   return null;
 };
 
-export default function EmailsByHourChart() {
-  const [data, setData] = useState([]);
+export default function EmailsByHourChart({ data }) {
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const res = await getEmailsByHour();
-
-        console.log("Emails by hour:", res.data); // debug
-
-        setData(res.data);
-      } catch (err) {
-        console.error("Error fetching hourly data:", err);
-      }
-    };
-
-    fetchData();
-  }, []);
+  if (!data || data.length === 0) {
+    return <p style={{ color: "white", textAlign: "center" }}>Loading chart...</p>;
+  }
 
   const maxCount = Math.max(...data.map(d => d.count), 1);
 
   return (
-    <div
-      style={{
-        background: "rgba(255,255,255,0.05)",
-        border: "1px solid rgba(255,255,255,0.08)",
-        borderRadius: 16,
-        padding: 24
-      }}
-    >
-      <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 20 }}>
-        <div
-          style={{
-            width: 4,
-            height: 20,
-            borderRadius: 2,
-            background: "linear-gradient(180deg, #10b981, #059669)"
-          }}
-        />
-        <h3 style={{ color: "#fff", fontSize: 15, fontWeight: 700, margin: 0 }}>
-          Emails by Hour
-        </h3>
-      </div>
+    <div style={{
+      background: "rgba(255,255,255,0.05)",
+      border: "1px solid rgba(255,255,255,0.08)",
+      borderRadius: 16,
+      padding: 24
+    }}>
+      <h3 style={{ color: "#fff" }}>Emails by Hour</h3>
 
       <ResponsiveContainer width="100%" height={260}>
-        {data.length > 0 ? (
-          <BarChart data={data} barCategoryGap="20%">
-            <CartesianGrid
-              strokeDasharray="3 3"
-              stroke="rgba(255,255,255,0.05)"
-              vertical={false}
-            />
+        <BarChart data={data}>
+          <CartesianGrid stroke="rgba(255,255,255,0.05)" />
 
-            <XAxis
-              dataKey="_id"
-              tick={{ fill: "rgba(255,255,255,0.35)", fontSize: 11 }}
-              axisLine={false}
-              tickLine={false}
-            />
+          <XAxis dataKey="_id" />
+          <YAxis />
 
-            <YAxis
-              tick={{ fill: "rgba(255,255,255,0.35)", fontSize: 11 }}
-              axisLine={false}
-              tickLine={false}
-            />
+          <Tooltip content={<CustomTooltip />} />
 
-            <Tooltip content={<CustomTooltip />} />
-
-            <Bar dataKey="count" radius={[4, 4, 0, 0]}>
-              {data.map((entry, index) => (
-                <Cell
-                  key={index}
-                  fill={`rgba(16, 185, 129, ${
-                    0.3 + (entry.count / maxCount) * 0.7
-                  })`}
-                />
-              ))}
-            </Bar>
-          </BarChart>
-        ) : (
-          <p style={{ color: "white", textAlign: "center" }}>
-            Loading chart...
-          </p>
-        )}
+          <Bar dataKey="count">
+            {data.map((entry, index) => (
+              <Cell
+                key={index}
+                fill={`rgba(16,185,129,${0.3 + (entry.count / maxCount) * 0.7})`}
+              />
+            ))}
+          </Bar>
+        </BarChart>
       </ResponsiveContainer>
     </div>
   );

@@ -1,6 +1,3 @@
-import { useEffect, useState } from "react";
-import { getSummary } from "../services/api";
-
 const cards = [
   {
     key: "totalEmails",
@@ -72,25 +69,9 @@ const cards = [
   },
 ];
 
-export default function SummaryCards() {
-  const [summary, setSummary] = useState(null);
+export default function SummaryCards({ data: summary }) {
 
-  useEffect(() => {
-    const fetchSummary = async () => {
-      try {
-        const res = await getSummary();
-
-        console.log("Summary:", res.data); // debug
-
-        setSummary(res.data);
-      } catch (err) {
-        console.error("Error fetching summary:", err);
-      }
-    };
-
-    fetchSummary();
-  }, []);
-
+  // ✅ loading state
   if (!summary)
     return (
       <div style={{ display: "flex", gap: 16, marginBottom: 32, flexWrap: "wrap" }}>
@@ -103,7 +84,6 @@ export default function SummaryCards() {
               borderRadius: 16,
               padding: 20,
               height: 110,
-              animation: "pulse 1.5s infinite",
             }}
           />
         ))}
@@ -163,27 +143,21 @@ export default function SummaryCards() {
             {card.icon}
           </div>
 
-          <p
-            style={{
-              color: "rgba(255,255,255,0.45)",
-              fontSize: 12,
-              fontWeight: 500,
-              textTransform: "uppercase",
-              letterSpacing: "0.05em",
-              marginBottom: 4,
-            }}
-          >
+          <p style={{
+            color: "rgba(255,255,255,0.45)",
+            fontSize: 12,
+            fontWeight: 500,
+            textTransform: "uppercase",
+            marginBottom: 4,
+          }}>
             {card.label}
           </p>
 
-          <p
-            style={{
-              color: "#fff",
-              fontSize: 22,
-              fontWeight: 800,
-              letterSpacing: "-0.5px",
-            }}
-          >
+          <p style={{
+            color: "#fff",
+            fontSize: 22,
+            fontWeight: 800,
+          }}>
             {card.format(summary[card.key])}
           </p>
         </div>

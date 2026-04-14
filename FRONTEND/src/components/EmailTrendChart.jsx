@@ -1,8 +1,6 @@
-import { useEffect, useState } from "react";
 import {
   XAxis, YAxis, Tooltip, CartesianGrid, ResponsiveContainer, Area, AreaChart
 } from "recharts";
-import { getEmailsPerDay } from "../services/api";
 
 const CustomTooltip = ({ active, payload, label }) => {
   if (active && payload && payload.length) {
@@ -27,24 +25,11 @@ const CustomTooltip = ({ active, payload, label }) => {
   return null;
 };
 
-export default function EmailTrendChart() {
-  const [data, setData] = useState([]);
+export default function EmailTrendChart({ data }) {
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const res = await getEmailsPerDay();
-
-        console.log("Emails per day:", res.data); // debug
-
-        setData(res.data);
-      } catch (err) {
-        console.error("Error fetching email trend:", err);
-      }
-    };
-
-    fetchData();
-  }, []);
+  if (!data || data.length === 0) {
+    return <p style={{ color: "white", textAlign: "center" }}>Loading chart...</p>;
+  }
 
   return (
     <div
@@ -70,47 +55,41 @@ export default function EmailTrendChart() {
       </div>
 
       <ResponsiveContainer width="100%" height={260}>
-        {data.length > 0 ? (
-          <AreaChart data={data}>
-            <defs>
-              <linearGradient id="trendGrad" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor="#6366f1" stopOpacity={0.3} />
-                <stop offset="95%" stopColor="#6366f1" stopOpacity={0} />
-              </linearGradient>
-            </defs>
+        <AreaChart data={data}>
+          <defs>
+            <linearGradient id="trendGrad" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="5%" stopColor="#6366f1" stopOpacity={0.3} />
+              <stop offset="95%" stopColor="#6366f1" stopOpacity={0} />
+            </linearGradient>
+          </defs>
 
-            <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
+          <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
 
-            <XAxis
-              dataKey="_id"
-              tick={{ fill: "rgba(255,255,255,0.35)", fontSize: 11 }}
-              axisLine={false}
-              tickLine={false}
-            />
+          <XAxis
+            dataKey="_id"
+            tick={{ fill: "rgba(255,255,255,0.35)", fontSize: 11 }}
+            axisLine={false}
+            tickLine={false}
+          />
 
-            <YAxis
-              tick={{ fill: "rgba(255,255,255,0.35)", fontSize: 11 }}
-              axisLine={false}
-              tickLine={false}
-            />
+          <YAxis
+            tick={{ fill: "rgba(255,255,255,0.35)", fontSize: 11 }}
+            axisLine={false}
+            tickLine={false}
+          />
 
-            <Tooltip content={<CustomTooltip />} />
+          <Tooltip content={<CustomTooltip />} />
 
-            <Area
-              type="monotone"
-              dataKey="count"
-              stroke="#6366f1"
-              strokeWidth={2.5}
-              fill="url(#trendGrad)"
-              dot={false}
-              activeDot={{ r: 5 }}
-            />
-          </AreaChart>
-        ) : (
-          <p style={{ color: "white", textAlign: "center" }}>
-            Loading chart...
-          </p>
-        )}
+          <Area
+            type="monotone"
+            dataKey="count"
+            stroke="#6366f1"
+            strokeWidth={2.5}
+            fill="url(#trendGrad)"
+            dot={false}
+            activeDot={{ r: 5 }}
+          />
+        </AreaChart>
       </ResponsiveContainer>
     </div>
   );
