@@ -22,8 +22,10 @@ router.get('/callback', async (req, res) => {
         const userInfo = await getUserInfo(tokens.access_token);
 
         // Redirect to frontend
-        const frontendUrl = `${process.env.FRONTEND_URL || 'http://localhost:5173'}/?auth_success=true&access_token=${tokens.access_token}&email=${userInfo.email}`;
-        
+        const baseUrl = (process.env.FRONTEND_URL || 'http://localhost:5173').replace(/\/$/, '');
+
+        const frontendUrl = `${baseUrl}?auth_success=true&access_token=${tokens.access_token}&email=${userInfo.email}`;
+
         res.redirect(frontendUrl);
 
     } catch (err) {
