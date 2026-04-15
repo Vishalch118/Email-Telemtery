@@ -21,7 +21,7 @@ function App() {
   const [data, setData] = useState(null);
   const [token, setToken] = useState(localStorage.getItem("token"));
 
-  // ✅ Handle OAuth redirect (IMPORTANT)
+  // ✅ Handle OAuth redirect
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const accessToken = params.get("access_token");
@@ -33,12 +33,19 @@ function App() {
 
       setToken(accessToken);
 
-      // Clean URL
       window.history.replaceState({}, document.title, "/");
     }
   }, []);
 
-  // ✅ Fetch data ONLY when token exists
+  // ✅ Validate login BEFORE anything
+  const userEmail = localStorage.getItem("userEmail");
+
+  if (!token || !userEmail) {
+    localStorage.clear(); // clean broken state
+    return <Login />;
+  }
+
+  // ✅ Fetch data only when token is valid
   useEffect(() => {
     if (!token) return;
 
@@ -71,16 +78,17 @@ function App() {
 
       } catch (err) {
         console.error("Error loading dashboard:", err);
+
+        // 🔥 AUTO LOGOUT IF TOKEN EXPIRED / INVALID
+        if (err.response?.status === 401 || err.response?.status === 500) {
+          localStorage.clear();
+          window.location.reload();
+        }
       }
     };
 
     fetchAll();
   }, [token]);
-
-  // ✅ Show login page if not logged in
-  if (!token) {
-    return <Login />;
-  }
 
   // ✅ Loading state
   if (!data) {
@@ -91,7 +99,7 @@ function App() {
     );
   }
 
-  // ✅ Dashboard UI (UNCHANGED)
+  // ✅ Dashboard UI
   return (
     <div style={{ minHeight: "100vh", background: "linear-gradient(135deg, #0f0c29 0%, #1a1a2e 50%, #16213e 100%)" }}>
       <header style={{ background: "rgba(255,255,255,0.04)", borderBottom: "1px solid rgba(255,255,255,0.08)", backdropFilter: "blur(12px)" }}>
