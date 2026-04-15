@@ -58,21 +58,31 @@ export default function TopSendersChart({ data }) {
           borderRadius: 2,
           background: "linear-gradient(180deg, #06b6d4, #0891b2)"
         }} />
-        <h3 style={{ color: "#fff", fontSize: 15, fontWeight: 700 }}>
+        <h3 style={{ color: "#fff", fontSize: 15, fontWeight: 700, marginBottom:16 }}>
           Top Senders
         </h3>
       </div>
 
       <ResponsiveContainer width="100%" height={260}>
-        <BarChart data={data} layout="vertical">
+        <BarChart
+          data={data}
+          layout="vertical"
+          margin={{ left: 20, right: 20 }}
+        >
           <CartesianGrid stroke="rgba(255,255,255,0.05)" horizontal={false} />
 
           <XAxis type="number" />
           <YAxis
             dataKey="_id"
             type="category"
-            width={110}
-            tickFormatter={extractName}
+            width={180}
+            tick={{ fill: "rgba(255,255,255,0.5)", fontSize: 12 }}
+            axisLine={false}
+            tickLine={false}
+            tickFormatter={(val) => {
+              const name = extractName(val);
+              return name.length > 18 ? name.slice(0, 18) + "..." : name;
+            }}
           />
 
           <Tooltip content={<CustomTooltip />} />

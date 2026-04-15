@@ -42,7 +42,12 @@ export default function EmailsByHourChart({ data }) {
       borderRadius: 16,
       padding: 24
     }}>
-      <h3 style={{ color: "#fff" }}>Emails by Hour</h3>
+      <h3 style={{
+        color: "#fff",
+        fontSize: 15,
+        fontWeight: 700,
+        marginBottom: 16
+      }}>Emails by Hour</h3>
 
       <ResponsiveContainer width="100%" height={260}>
         <BarChart data={data}>

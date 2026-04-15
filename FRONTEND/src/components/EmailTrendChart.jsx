@@ -49,7 +49,7 @@ export default function EmailTrendChart({ data }) {
             background: "linear-gradient(180deg, #6366f1, #8b5cf6)"
           }}
         />
-        <h3 style={{ color: "#fff", fontSize: 15, fontWeight: 700, margin: 0 }}>
+        <h3 style={{ color: "#fff", fontSize: 15, fontWeight: 700, marginBottom:16 }}>
           Emails Per Day
         </h3>
       </div>

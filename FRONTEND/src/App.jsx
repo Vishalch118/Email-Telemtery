@@ -21,6 +21,12 @@ function App() {
   const [data, setData] = useState(null);
   const [token, setToken] = useState(localStorage.getItem("token"));
 
+  const handleLogout = () => {
+    localStorage.clear();
+    setToken(null);
+    setData(null);
+  };
+
   // ✅ Handle OAuth redirect
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -85,7 +91,7 @@ function App() {
     fetchAll();
   }, [token]);
 
-   if (!token || !userEmail) {
+  if (!token || !userEmail) {
     localStorage.clear(); // clean broken state
     return <Login />;
   }
@@ -116,8 +122,32 @@ function App() {
             </div>
           </div>
 
-          <div style={{ background: "rgba(99,102,241,0.15)", border: "1px solid rgba(99,102,241,0.3)", borderRadius: 20, padding: "6px 14px", color: "#a5b4fc", fontSize: 13 }}>
-            Gmail Connected
+          <div style={{ display: "flex", gap: 10 }}>
+            <div style={{
+              background: "rgba(99,102,241,0.15)",
+              border: "1px solid rgba(99,102,241,0.3)",
+              borderRadius: 20,
+              padding: "6px 14px",
+              color: "#a5b4fc",
+              fontSize: 13
+            }}>
+              Gmail Connected
+            </div>
+
+            <button
+              onClick={handleLogout}
+              style={{
+                background: "rgba(239,68,68,0.15)",
+                border: "1px solid rgba(239,68,68,0.3)",
+                borderRadius: 20,
+                padding: "6px 14px",
+                color: "#fca5a5",
+                fontSize: 13,
+                cursor: "pointer"
+              }}
+            >
+              Logout
+            </button>
           </div>
         </div>
       </header>

@@ -44,7 +44,12 @@ export default function EmailsByWeekdayChart({ data }) {
       borderRadius: 16,
       padding: 24
     }}>
-      <h3 style={{ color: "#fff" }}>Emails by Weekday</h3>
+      <h3 style={{
+        color: "#fff",
+        fontSize: 15,
+        fontWeight: 700,
+        marginBottom: 16
+      }}>Emails by Weekday</h3>
 
       <ResponsiveContainer width="100%" height={260}>
         <BarChart data={formatted}>
