@@ -40,11 +40,6 @@ function App() {
   // ✅ Validate login BEFORE anything
   const userEmail = localStorage.getItem("userEmail");
 
-  if (!token || !userEmail) {
-    localStorage.clear(); // clean broken state
-    return <Login />;
-  }
-
   // ✅ Fetch data only when token is valid
   useEffect(() => {
     if (!token) return;
@@ -89,6 +84,11 @@ function App() {
 
     fetchAll();
   }, [token]);
+
+   if (!token || !userEmail) {
+    localStorage.clear(); // clean broken state
+    return <Login />;
+  }
 
   // ✅ Loading state
   if (!data) {
