@@ -64,6 +64,14 @@ Rules:
 - Do NOT use placeholders
 - Do NOT include subject line
 - Do NOT include signature
+- Reply as the recipient of the email.
+- Write ONLY the reply email. 
+- Do NOT explain anything. 
+- Do NOT generate multiple options. 
+- Do NOT include placeholders like [Name]. 
+- Keep the reply short (2-4 sentences). 
+- Maintain a polite and professional tone.
+- DO NOT sound sorry or Arrogant. Just be natural.
 
 Email:
 From: ${from || "Unknown"}
