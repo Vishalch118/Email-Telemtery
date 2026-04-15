@@ -35,34 +35,35 @@ function isAutomatedEmail(subject = "", body = "") {
 
 router.post("/reply", async (req, res) => {
   try {
-    const { subject, body, from } = req.body;
+    const { subject = "", body = "", from = "" } = req.body;
 
-    if (!body || body.trim().length < 10) {
-      return res.json({
-        reply: "Not enough content to generate a meaningful reply."
-      });
+    // ✅ Always create usable content
+    let content = body?.trim();
+
+    if (!content || content.length < 20) {
+      content = `Subject: ${subject}`;
     }
 
-    const trimmedBody = body.slice(0, 1200);
+    const trimmedBody = content.slice(0, 1200);
 
-    /* Skip automated emails */
-    if (isAutomatedEmail(subject, trimmedBody)) {
+    const DEMO_MODE = false;
+
+    if (!DEMO_MODE && isAutomatedEmail(subject, trimmedBody)) {
       return res.json({
         reply: "No reply needed for this automated or system-generated email."
       });
     }
 
     const prompt = `
-You are writing a real human email reply.
+Write a natural human reply to the following email.
 
 Rules:
-- Write naturally like a real person (not a template)
-- Do NOT include placeholders like [Your Name]
-- Do NOT include unnecessary greetings like "Dear Sir/Madam"
 - Keep it short (2–4 sentences)
 - Be polite and professional
-- Make it sound conversational, not robotic
-- Only output the reply text
+- Sound natural (not robotic)
+- Do NOT use placeholders
+- Do NOT include subject line
+- Do NOT include signature
 
 Email:
 From: ${from || "Unknown"}
@@ -71,7 +72,7 @@ Subject: ${subject || "No Subject"}
 Content:
 ${trimmedBody}
 
-Write the reply now.
+Reply:
 `;
 
     const completion = await client.chat.completions.create({
@@ -79,20 +80,20 @@ Write the reply now.
       messages: [
         {
           role: "system",
-          content: "You are a professional email reply assistant."
+          content: "You write concise, natural, human-like email replies."
         },
         {
           role: "user",
           content: prompt
         }
       ],
-      temperature: 0.5,
+      temperature: 0.6,
       max_tokens: 200
     });
 
     const reply =
       completion?.choices?.[0]?.message?.content?.trim() ||
-      "No reply generated.";
+      "Could not generate reply.";
 
     res.json({ reply });
 
