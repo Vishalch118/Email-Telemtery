@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const { getAuthUrl, getTokens, getUserInfo } = require('../utils/googleAuth');
 
-// Step 1: Get login URL
+//Get login URL
 router.get('/url', async (req, res) => {
     try {
         const url = await getAuthUrl();
@@ -12,7 +12,7 @@ router.get('/url', async (req, res) => {
     }
 });
 
-// Step 2: Handle callback
+// handling callback
 router.get('/callback', async (req, res) => {
     const { code } = req.query;
     if (!code) return res.status(400).send('No code provided');

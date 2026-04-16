@@ -25,14 +25,12 @@ app.use("/analytics", analyticsRoutes);
 app.use("/emails", emailRoutes);
 app.use("/ai", aiRoutes);
 
-// ================= DB =================
 connectDB();
 mongoose.connection.on("connected", () => {
   console.log("MongoDB connected");
 });
 
 
-// ================= START =================
 app.listen(PORT, () => {
-  console.log(`\n🚀 Server running on port ${PORT}`);
+  console.log(`\n Server running on port ${PORT}`);
 });

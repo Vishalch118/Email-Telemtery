@@ -3,12 +3,12 @@ const router = express.Router();
 const { google } = require("googleapis");
 const { getClient } = require("../utils/googleAuth");
 const Email = require("../models/Email");
+const redisClient = require("../redisClient");
 
-// GET /emails (from Gmail directly)
 router.get("/", async (req, res) => {
   try {
     const token = req.headers.authorization?.split(" ")[1];
-    const userEmail = req.headers["x-user-email"]; // ✅ must be inside route
+    const userEmail = req.headers["x-user-email"];
 
     if (!token) {
       return res.status(401).json({ error: "Missing token" });
@@ -17,6 +17,15 @@ router.get("/", async (req, res) => {
     if (!userEmail) {
       return res.status(400).json({ error: "Missing user email" });
     }
+
+    const cacheKey = `emails:${userEmail}`;
+
+    try {
+      const cached = await redisClient.get(cacheKey);
+      if (cached) {
+        return res.json(JSON.parse(cached));
+      }
+    } catch (err) {}
 
     const oauth2Client = await getClient();
     oauth2Client.setCredentials({ access_token: token });
@@ -42,7 +51,7 @@ router.get("/", async (req, res) => {
 
         return {
           gmailId: msg.id,
-          userEmail, // ✅ link to user
+          userEmail,
           subject: getHeader("Subject"),
           from: getHeader("From"),
           to: getHeader("To"),
@@ -53,11 +62,17 @@ router.get("/", async (req, res) => {
       })
     );
 
-    // ✅ Send response immediately (FAST)
     res.json(messages);
 
-    // ⚡ Background DB save (NON-BLOCKING)
     (async () => {
+      try {
+        await redisClient.setEx(
+          cacheKey,
+          60,
+          JSON.stringify(messages)
+        );
+      } catch (err) {}
+
       try {
         const bulkOps = messages.map((email) => ({
           updateOne: {
@@ -71,11 +86,7 @@ router.get("/", async (req, res) => {
         }));
 
         await Email.bulkWrite(bulkOps);
-
-        console.log("✅ Emails stored in DB");
-      } catch (err) {
-        console.error("DB save error:", err.message);
-      }
+      } catch (err) {}
     })();
 
   } catch (err) {
