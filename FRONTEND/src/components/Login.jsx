@@ -109,8 +109,8 @@ export default function Login() {
           📧
         </div>
 
-        <h1 style={{ 
-          color: "#fff", 
+        <h1 style={{
+          color: "#fff",
           marginBottom: "12px",
           fontSize: "32px",
           fontWeight: "700",
@@ -119,8 +119,8 @@ export default function Login() {
           Email Telemetry
         </h1>
 
-        <p style={{ 
-          color: "rgba(255,255,255,0.6)", 
+        <p style={{
+          color: "rgba(255,255,255,0.6)",
           marginBottom: "36px",
           fontSize: "15px",
           lineHeight: "1.6"
@@ -140,8 +140,8 @@ export default function Login() {
             fontWeight: "600",
             fontSize: "15px",
             cursor: "pointer",
-            background: isHovered 
-              ? "linear-gradient(135deg, #7c3aed, #6366f1)" 
+            background: isHovered
+              ? "linear-gradient(135deg, #7c3aed, #6366f1)"
               : "linear-gradient(135deg, #6366f1, #8b5cf6)",
             color: "#fff",
             boxShadow: isHovered
@@ -156,8 +156,13 @@ export default function Login() {
             gap: "8px"
           }}
         >
+          <img
+            src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg"
+            alt="Google logo"
+            style={{ width: "18px", height: "18px" }}
+          />
           <span>Continue with Google</span>
-          <span>🚀</span>
+          <span></span>
         </button>
 
         <p style={{
