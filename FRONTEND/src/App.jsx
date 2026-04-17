@@ -27,7 +27,7 @@ function App() {
     setData(null);
   };
 
-  // ✅ Handle OAuth redirect
+  // Handle OAuth redirect
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const accessToken = params.get("access_token");
@@ -39,14 +39,14 @@ function App() {
 
       setToken(accessToken);
 
-      window.history.replaceState({}, document.title, "/");
+      window.history.replaceState({}, document.title, "/"); //hides token in address bar
     }
   }, []);
 
-  // ✅ Validate login BEFORE anything
+  // Validate login BEFORE anything
   const userEmail = localStorage.getItem("userEmail");
 
-  // ✅ Fetch data only when token is valid
+  // Fetch data only when token is valid
   useEffect(() => {
     if (!token) return;
 
@@ -80,7 +80,7 @@ function App() {
       } catch (err) {
         console.error("Error loading dashboard:", err);
 
-        // 🔥 AUTO LOGOUT IF TOKEN EXPIRED / INVALID
+        // AUTO LOGOUT IF TOKEN EXPIRED / INVALID
         if (err.response?.status === 401 || err.response?.status === 500) {
           localStorage.clear();
           window.location.reload();
@@ -96,7 +96,7 @@ function App() {
     return <Login />;
   }
 
-  // ✅ Loading state
+  // Loading state
   if (!data) {
     return (
       <p style={{ color: "white", textAlign: "center", marginTop: 50 }}>
@@ -105,7 +105,7 @@ function App() {
     );
   }
 
-  // ✅ Dashboard UI
+  // Dashboard UI
   return (
     <div style={{ minHeight: "100vh", background: "linear-gradient(135deg, #0f0c29 0%, #1a1a2e 50%, #16213e 100%)" }}>
       <header style={{ background: "rgba(255,255,255,0.04)", borderBottom: "1px solid rgba(255,255,255,0.08)", backdropFilter: "blur(12px)" }}>

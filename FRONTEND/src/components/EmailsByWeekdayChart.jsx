@@ -29,7 +29,7 @@ export default function EmailsByWeekdayChart({ data }) {
     return <p style={{ color: "white", textAlign: "center" }}>Loading chart...</p>;
   }
 
-  // ✅ transform here (no state)
+  // transform here (no state)
   const formatted = data.map(item => ({
     day: days[item._id - 1],
     count: item.count

@@ -20,7 +20,7 @@ export default function EmailList({ data: emails }) {
   const [aiReplies, setAiReplies] = useState({});
   const [loadingAI, setLoadingAI] = useState({});
 
-  // ✅ loading guard
+  // loading guard
   if (!emails) {
     return <p style={{ color: "white", textAlign: "center" }}>Loading emails...</p>;
   }
@@ -32,7 +32,7 @@ export default function EmailList({ data: emails }) {
     }));
 
     try {
-      const res = await generateReply(email.subject, email.body);
+      const res = await generateReply(email.subject, email.body,email.from);
 
       setAiReplies(prev => ({
         ...prev,
@@ -130,7 +130,7 @@ export default function EmailList({ data: emails }) {
               )}
             </div>
 
-            {/* ✅ BUTTON RESTORED EXACTLY */}
+            {/* BUTTON RESTORED EXACTLY */}
             <button
               style={{
                 flexShrink: 0,

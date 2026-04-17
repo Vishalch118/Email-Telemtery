@@ -1,11 +1,11 @@
 import axios from "axios";
 
-// ✅ Axios instance
+// Axios instance
 const API = axios.create({
   baseURL: import.meta.env.VITE_API_URL,
 });
 
-// ✅ Attach token + userEmail to every request
+// Attach token + userEmail to every request
 API.interceptors.request.use((config) => {
   const token = localStorage.getItem("token");
   const userEmail = localStorage.getItem("userEmail");
@@ -32,7 +32,7 @@ export const getEmails = () => API.get("/emails");
 
 // ================= AI REPLY =================
 
-export const generateReply = async (subject, body) => {
+export const generateReply = async (subject, body,from) => {
   const token = localStorage.getItem("token");
   const userEmail = localStorage.getItem("userEmail");
 
@@ -43,7 +43,7 @@ export const generateReply = async (subject, body) => {
       "Authorization": `Bearer ${token}`,
       "x-user-email": userEmail
     },
-    body: JSON.stringify({ subject, body })
+    body: JSON.stringify({ subject, body,from })
   });
 
   return res.json();

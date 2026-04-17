@@ -71,7 +71,7 @@ const cards = [
 
 export default function SummaryCards({ data: summary }) {
 
-  // ✅ loading state
+  // loading state
   if (!summary)
     return (
       <div style={{ display: "flex", gap: 16, marginBottom: 32, flexWrap: "wrap" }}>
